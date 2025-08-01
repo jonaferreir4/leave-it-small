@@ -1,0 +1,15 @@
+bin/
+obj/
+wwwroot/
+.vs/
+.idea/
+*.user
+*.suo
+# Configurações sensíveis
+.env
+.env.*
+
+appsettings.Development.json
+secrets.json
+
+**/docker-compose.override.yml
