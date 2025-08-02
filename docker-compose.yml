@@ -25,11 +25,17 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5000:5000"
     volumes:
       - .:/app
     command: ["dotnet", "leave-it-small.dll"]
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.leaveit-api.rule=Host(`localhost`) &&  PathPrefix(/api)"
+        - "traefik.http.routers.leaveit-api.entrypoints=web"
+        - "traefik.http.routers.leaveit-redirect.rule=Host(`localhost`)"
+        - "traefik.http.routers.leaveit-redirect.entrypoints=web"
+        - "traefik.http.routers.leaveit-redirect.priority=1"
+        - "traefik.http.services.leaveit.loadbalancer.server.port=5000" 
   
   traefik: 
       image: traefik:v3.5
@@ -40,9 +46,8 @@ services:
       ports:
         - "80:80"
         - "8080:8080"
-
       volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
+        - /var/run/docker.sock:/var/run/docker.sock       
 
 volumes:
   postgres_data:
