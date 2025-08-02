@@ -1,9 +1,8 @@
 using leave_it_small.Data;
+using leave_it_small.Http.Responses;
 using leave_it_small.Models;
 using leave_it_small.utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
-
 namespace leave_it_small.Services;
 
 public class UrlShorteningService(ApplicationDbContext _context)
@@ -33,7 +32,7 @@ public class UrlShorteningService(ApplicationDbContext _context)
         }
     }
 
-    public async Task<ShortenedUrl> CreateShortenedUrlAsync(string originalUrl, string baseUrl)
+    public async Task<ShortenedUrlResponse> CreateShortenedUrlAsync(string originalUrl, string baseUrl)
     {
         var code = await GenerateUniqueCode();
 
@@ -49,7 +48,11 @@ public class UrlShorteningService(ApplicationDbContext _context)
         _context.ShortenedUrls.Add(shortenedUrl);
         await _context.SaveChangesAsync();
 
-        return shortenedUrl;
+        return new ShortenedUrlResponse(
+            shortenedUrl.ShortUrl,
+            shortenedUrl.LongUrl,
+            shortenedUrl.Click
+            );
     }
 
     public async Task<string?> GetLongUrlAsync(string code)
@@ -63,6 +66,29 @@ public class UrlShorteningService(ApplicationDbContext _context)
     }
 
 
+    public async Task<ShortenedUrlResponse> DeleteShortUrlAsync(string code)
+    {
+        var entity = await _context.ShortenedUrls.FirstOrDefaultAsync(s => s.Code == code);
+
+        if (entity == null) return null;
+
+        _context.Remove(entity);
+        await _context.SaveChangesAsync();
+        return new ShortenedUrlResponse(
+            entity.ShortUrl,
+            entity.LongUrl,
+            entity.Click
+         );
+    }
+
+
+    public async Task<List<ShortenedUrlResponse>> GetAllUrls()
+    {
+        var listResponse = await _context.ShortenedUrls.ToListAsync();
+        return [.. listResponse.Select(s => new ShortenedUrlResponse(s.ShortUrl, s.LongUrl, s.Click))];
+    }
+
+    
     public async Task<int?> GetClickCouter(string code)
     {
         var entity = await _context.ShortenedUrls.FirstOrDefaultAsync(s => s.Code == code);

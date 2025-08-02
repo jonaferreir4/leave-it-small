@@ -1,17 +1,18 @@
 using leave_it_small.Http.Requests;
+using leave_it_small.Models;
 using leave_it_small.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace leave_it_small.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api")]
 public class ShortenedUrlController(UrlShorteningService urlShorteningService) : Controller
 {
     private readonly UrlShorteningService _urlShorteningService = urlShorteningService;
 
 
-    [HttpPost("/")]
+    [HttpPost("/shorten")]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
     {
         if (!Uri.IsWellFormedUriString(request.Url, UriKind.Absolute))
@@ -20,12 +21,12 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
         }
 
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
-        var shortenedUrl = await _urlShorteningService.CreateShortenedUrlAsync(request.Url, baseUrl);
+        var result = await _urlShorteningService.CreateShortenedUrlAsync(request.Url, baseUrl);
 
-        return Ok(new { shortenedUrl.ShortUrl });
+        return Ok(result);
     }
 
-    [HttpGet("{code}")]
+    [HttpGet("/{code}")]
     public async Task<IActionResult> RedirectToLongUrl(string code)
     {
         var longUrl = await _urlShorteningService.GetLongUrlAsync(code);
@@ -37,14 +38,17 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
         return Redirect(longUrl);
     }
     
-    [HttpGet("/couter/{code}")]
-    public async Task<IActionResult> GetClickCounter(string code)
+    
+     [HttpGet("/links")]
+    public async Task<IActionResult> GetAllShortenedUrls()
     {
-        var clicks = await _urlShorteningService.GetClickCouter(code);
-        if (clicks == null)
-        {
-            return NotFound();
-        }
-        return Ok(clicks);
+        return Ok("response");
+    }
+
+    [HttpDelete("/links/{code}")]
+    public async Task<IActionResult> DeleteShortenedUrl(string code)
+    {
+        var result =  await _urlShorteningService.DeleteShortUrlAsync(code);
+        return Ok(result);    
     }
 }
