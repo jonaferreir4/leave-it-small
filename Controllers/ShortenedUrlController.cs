@@ -1,5 +1,4 @@
 using leave_it_small.Http.Requests;
-using leave_it_small.Models;
 using leave_it_small.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +11,7 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
     private readonly UrlShorteningService _urlShorteningService = urlShorteningService;
 
 
-    [HttpPost("/shorten")]
+    [HttpPost("shorten")]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
     {
         if (!Uri.IsWellFormedUriString(request.Url, UriKind.Absolute))
@@ -26,7 +25,7 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
         return Ok(result);
     }
 
-    [HttpGet("/{code}")]
+    [HttpGet("{code}")]
     public async Task<IActionResult> RedirectToLongUrl(string code)
     {
         var longUrl = await _urlShorteningService.GetLongUrlAsync(code);
@@ -39,13 +38,13 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
     }
     
     
-     [HttpGet("/links")]
+     [HttpGet("links")]
     public async Task<IActionResult> GetAllShortenedUrls()
     {
         return Ok("response");
     }
 
-    [HttpDelete("/links/{code}")]
+    [HttpDelete("links/{code}")]
     public async Task<IActionResult> DeleteShortenedUrl(string code)
     {
         var result =  await _urlShorteningService.DeleteShortUrlAsync(code);
