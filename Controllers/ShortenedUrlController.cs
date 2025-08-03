@@ -28,7 +28,10 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
     [HttpGet("/{code}")]
     public async Task<IActionResult> RedirectToLongUrl(string code)
     {
-        var longUrl = await _urlShorteningService.GetLongUrlAsync(code);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = Request.Headers.UserAgent.ToString();
+
+        var longUrl = await _urlShorteningService.GetLongUrlAsync(code, ipAddress, userAgent);
         if (longUrl == null)
         {
             return NotFound();
