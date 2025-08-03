@@ -55,12 +55,24 @@ public class UrlShorteningService(ApplicationDbContext _context)
             );
     }
 
-    public async Task<string?> GetLongUrlAsync(string code)
+    public async Task<string?> GetLongUrlAsync(string code, string ipAdress, string userAgent)
     {
         var entity = await _context.ShortenedUrls.FirstOrDefaultAsync(s => s.Code == code);
         if (entity == null) return null;
 
         entity.Click += 1;
+
+        var accessLog = new AccessLog
+        {
+            Id = Guid.NewGuid(),
+            ShortenedUrlId = entity.Id,
+            IpAdress = ipAdress ?? "Unknown",
+            UserAgent = userAgent ?? "Unknown",
+            AccessDate = DateTime.UtcNow
+        };
+
+        _context.AccessLogs.Add(accessLog);
+
         await _context.SaveChangesAsync();
         return entity.LongUrl;
     }
