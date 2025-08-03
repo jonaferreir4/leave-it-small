@@ -31,7 +31,7 @@ services:
         - "traefik.http.routers.leaveit-api.entrypoints=websecure"
         - "traefik.http.routers.leaveit-api.tls.certresolver=letsencrypt"
 
-        - "traefik.http.routers.leaveit-redirect.rule=Host(`localhost`)"
+        - "traefik.http.routers.leaveit-redirect.rule=Host(`localhost`) && PathPrefix(`/`)"
         - "traefik.http.routers.leaveit-redirect.entrypoints=websecure"
         - "traefik.http.routers.leaveit-redirect.tls.certresolver=letsencrypt"
         - "traefik.http.routers.leaveit-redirect.priority=1"
