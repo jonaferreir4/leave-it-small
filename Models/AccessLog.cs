@@ -8,4 +8,6 @@ public class AccessLog
     public string UserAgent { get; set; } = string.Empty;
     public DateTime AccessDate { get; set; }
 
+    public ShortenedUrl shortenedUrl { get; set; }
+
 }
