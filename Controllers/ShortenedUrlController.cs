@@ -25,7 +25,7 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
         return Ok(result);
     }
 
-    [HttpGet("{code}")]
+    [HttpGet("/{code}")]
     public async Task<IActionResult> RedirectToLongUrl(string code)
     {
         var longUrl = await _urlShorteningService.GetLongUrlAsync(code);
