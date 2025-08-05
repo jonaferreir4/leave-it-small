@@ -6,7 +6,10 @@ namespace leave_it_small.Controllers;
 
 [ApiController]
 [Route("")]
-public class ShortenedUrlController(UrlShorteningService urlShorteningService) : Controller
+public class ShortenedUrlController(
+    UrlShorteningService urlShorteningService,
+    IConfiguration _configuration
+    ) : Controller
 {
     private readonly UrlShorteningService _urlShorteningService = urlShorteningService;
 
@@ -14,15 +17,22 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
     [HttpPost("api/shorten")]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
     {
+
         if (!Uri.IsWellFormedUriString(request.Url, UriKind.Absolute))
         {
             return BadRequest("Invalid URL.");
         }
 
-        var baseUrl = $"{Request.Scheme}://{Request.Host}";
-        var result = await _urlShorteningService.CreateShortenedUrlAsync(request.Url, baseUrl);
-
-        return Ok(result);
+        try
+        {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var result = await _urlShorteningService.CreateShortenedUrlAsync(request.Url, baseUrl);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpGet("{code}")]
@@ -39,9 +49,9 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
         }
         return Redirect(longUrl);
     }
-    
-    
-     [HttpGet("api/links")]
+
+
+    [HttpGet("api/links")]
     public async Task<IActionResult> GetAllShortenedUrls()
     {
         var result = await _urlShorteningService.GetAllUrlsAsync();
@@ -51,7 +61,7 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
     [HttpDelete("api/links/{code}")]
     public async Task<IActionResult> DeleteShortenedUrl(string code)
     {
-        var result =  await _urlShorteningService.DeleteShortUrlAsync(code);
-        return Ok(result);    
+        var result = await _urlShorteningService.DeleteShortUrlAsync(code);
+        return Ok(result);
     }
 }
