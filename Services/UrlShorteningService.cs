@@ -94,7 +94,7 @@ public class UrlShorteningService(ApplicationDbContext _context)
     }
 
 
-    public async Task<List<ShortenedUrlResponse>> GetAllUrls()
+    public async Task<List<ShortenedUrlResponse>> GetAllUrlsAsync()
     {
         var listResponse = await _context.ShortenedUrls.ToListAsync();
         return [.. listResponse.Select(s => new ShortenedUrlResponse(s.ShortUrl, s.LongUrl, s.Click))];
