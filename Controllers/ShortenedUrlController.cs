@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace leave_it_small.Controllers;
 
 [ApiController]
-[Route("api")]
+[Route("")]
 public class ShortenedUrlController(UrlShorteningService urlShorteningService) : Controller
 {
     private readonly UrlShorteningService _urlShorteningService = urlShorteningService;
 
 
-    [HttpPost("shorten")]
+    [HttpPost("api/shorten")]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
     {
         if (!Uri.IsWellFormedUriString(request.Url, UriKind.Absolute))
@@ -25,7 +25,7 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
         return Ok(result);
     }
 
-    [HttpGet("/{code}")]
+    [HttpGet("{code}")]
     public async Task<IActionResult> RedirectToLongUrl(string code)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -41,13 +41,14 @@ public class ShortenedUrlController(UrlShorteningService urlShorteningService) :
     }
     
     
-     [HttpGet("links")]
+     [HttpGet("api/links")]
     public async Task<IActionResult> GetAllShortenedUrls()
     {
-        return Ok("response");
+        var result = await _urlShorteningService.GetAllUrlsAsync();
+        return Ok(result);
     }
 
-    [HttpDelete("links/{code}")]
+    [HttpDelete("api/links/{code}")]
     public async Task<IActionResult> DeleteShortenedUrl(string code)
     {
         var result =  await _urlShorteningService.DeleteShortUrlAsync(code);
