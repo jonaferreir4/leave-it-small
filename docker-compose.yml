@@ -24,49 +24,34 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      # A base URL é útil para a sua API construir os links curtos
+      BASE_URL: http://short.local 
     command: ["dotnet", "leave-it-small.dll"]
     labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.leaveit-api.rule=Host(`localhost`) &&  PathPrefix(`/api`)"
-        - "traefik.http.routers.leaveit-api.entrypoints=websecure"
-        - "traefik.http.routers.leaveit-api.tls.certresolver=letsencrypt"
+      - "traefik.enable=true" 
+      # Roteamento para a API (ex: /api/shorten, /api/links)
+      - "traefik.http.routers.leaveit-api.rule=Host(`short.local`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.leaveit-api.entrypoints=web"
+      # Roteamento inteligente para o short_code (o coração do desafio)
+      - "traefik.http.routers.leaveit-redirect.rule=Host(`short.local`) && PathRegexp(`/`)"
+      - "traefik.http.routers.leaveit-redirect.entrypoints=web"
+      - "traefik.http.routers.leaveit-redirect.priority=10" # Prioridade para evitar conflitos com a rota da API
+      - "traefik.http.services.leaveit-service.loadbalancer.server.port=5000" 
 
-        - "traefik.http.routers.leaveit-redirect.rule=Host(`localhost`) && PathPrefix(`/`)"
-        - "traefik.http.routers.leaveit-redirect.entrypoints=websecure"
-        - "traefik.http.routers.leaveit-redirect.tls.certresolver=letsencrypt"
-        - "traefik.http.routers.leaveit-redirect.priority=1"
-        - "traefik.http.services.leaveit-service.loadbalancer.server.port=5000" 
-  
   traefik: 
       image: traefik:v3.5
       command: 
         - "--api.dashboard=true"
         - "--entrypoints.web.address=:80"
-        - "--entrypoints.websecure.address=:443"
-        - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-        - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-        - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-        - "--certificatesresolvers.letsencrypt.acme.email=${LE_EMAIL}"
-        - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
         - "--providers.docker=true"
         - "--providers.docker.exposedbydefault=false"
       ports:
         - "80:80"
-        - "443:443"
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - traefik-certs:/letsencrypt
-
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
-        - "traefik.http.routers.traefik.service=api@internal"
-        - "traefik.http.routers.traefik.entrypoints=websecure"
-        - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-        - "traefik.http.routers.traefik.middlewares=auth@docker"
-        - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"       
+      # ... (restante da sua config do traefik, que parece ok)
 
 volumes:
   postgres_data:
   traefik-certs:
-  
