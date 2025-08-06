@@ -24,8 +24,9 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      # A base URL é útil para a sua API construir os links curtos
-      BASE_URL: http://short.local 
+      
+      DOMAIN_NAME: ${DOMAIN_NAME}
+
     command: ["dotnet", "leave-it-small.dll"]
     labels:
       - "traefik.enable=true" 
