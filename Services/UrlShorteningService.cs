@@ -34,6 +34,17 @@ public class UrlShorteningService(ApplicationDbContext _context)
 
     public async Task<ShortenedUrlResponse> CreateShortenedUrlAsync(string originalUrl, string baseUrl)
     {
+        var domainName = Environment.GetEnvironmentVariable("DOMAIN_NAME");
+        if (!string.IsNullOrEmpty(domainName))
+    {
+        var originalUri = new Uri(originalUrl);
+        if (originalUri.Host.Equals(domainName, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("This URL is already shortened.");
+        }
+    }
+
+
         var code = await GenerateUniqueCode();
 
         var shortenedUrl = new ShortenedUrl
