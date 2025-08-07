@@ -27,6 +27,13 @@ public class ShortenedUrlController(
         return Ok(result);
     }
 
+    [HttpGet("api/links/{code}")]
+    public async Task<IActionResult> GetShortenedUrl(string code)
+    {
+        var result = await _urlShorteningService.GetShortUrlAsync(code);
+        return Ok(result);
+    }
+
     [HttpDelete("api/links/{code}")]
     public async Task<IActionResult> DeleteShortenedUrl(string code)
     {
