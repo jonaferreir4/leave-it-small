@@ -36,13 +36,13 @@ public class UrlShorteningService(ApplicationDbContext _context)
     {
         var domainName = Environment.GetEnvironmentVariable("DOMAIN_NAME");
         if (!string.IsNullOrEmpty(domainName))
-    {
-        var originalUri = new Uri(originalUrl);
-        if (originalUri.Host.Equals(domainName, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("This URL is already shortened.");
+            var originalUri = new Uri(originalUrl);
+            if (originalUri.Host.Equals(domainName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("This URL is already shortened.");
+            }
         }
-    }
 
 
         var code = await GenerateUniqueCode();
@@ -59,10 +59,12 @@ public class UrlShorteningService(ApplicationDbContext _context)
         _context.ShortenedUrls.Add(shortenedUrl);
         await _context.SaveChangesAsync();
 
+        DateOnly date = DateOnly.FromDateTime(shortenedUrl.CreatedOnUtc);
         return new ShortenedUrlResponse(
             shortenedUrl.ShortUrl,
             shortenedUrl.LongUrl,
-            shortenedUrl.Click
+            shortenedUrl.Click,
+            date
             );
     }
 
@@ -88,7 +90,6 @@ public class UrlShorteningService(ApplicationDbContext _context)
         return entity.LongUrl;
     }
 
-
     public async Task<ShortenedUrlResponse> DeleteShortUrlAsync(string code)
     {
         var entity = await _context.ShortenedUrls.FirstOrDefaultAsync(s => s.Code == code);
@@ -97,24 +98,42 @@ public class UrlShorteningService(ApplicationDbContext _context)
 
         _context.Remove(entity);
         await _context.SaveChangesAsync();
+        DateOnly date = DateOnly.FromDateTime(entity.CreatedOnUtc);
         return new ShortenedUrlResponse(
             entity.ShortUrl,
             entity.LongUrl,
-            entity.Click
+            entity.Click,
+            date
          );
     }
 
+    public async Task<ShortenedUrlResponse> GetShortUrlAsync(string code)
+    {
+        var entity = await _context.ShortenedUrls.FirstOrDefaultAsync(s => s.Code == code);
 
+        if (entity == null) return null;
+        DateOnly date = DateOnly.FromDateTime(entity.CreatedOnUtc);
+        return new ShortenedUrlResponse(
+            entity.ShortUrl,
+            entity.LongUrl,
+            entity.Click,
+            date
+         );
+    }
     public async Task<List<ShortenedUrlResponse>> GetAllUrlsAsync()
     {
         var listResponse = await _context.ShortenedUrls.ToListAsync();
-        return [.. listResponse.Select(s => new ShortenedUrlResponse(s.ShortUrl, s.LongUrl, s.Click))];
+
+        return [.. listResponse.Select(s =>
+        {
+            DateOnly date = DateOnly.FromDateTime(s.CreatedOnUtc);
+            return new ShortenedUrlResponse(s.ShortUrl, s.LongUrl, s.Click, date);
+        })];
     }
 
-    
     public async Task<int?> GetClickCouter(string code)
     {
         var entity = await _context.ShortenedUrls.FirstOrDefaultAsync(s => s.Code == code);
         return entity?.Click;
     }
-    }
+}
