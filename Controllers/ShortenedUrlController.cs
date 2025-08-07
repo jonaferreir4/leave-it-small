@@ -14,6 +14,26 @@ public class ShortenedUrlController(
     private readonly UrlShorteningService _urlShorteningService = urlShorteningService;
 
 
+    [HttpGet("api")]
+    public IActionResult ApiRoot()
+    {
+        return Ok(new { message = "API is running" });
+    }
+
+    [HttpGet("api/links")]
+    public async Task<IActionResult> GetAllShortenedUrls()
+    {
+        var result = await _urlShorteningService.GetAllUrlsAsync();
+        return Ok(result);
+    }
+
+    [HttpDelete("api/links/{code}")]
+    public async Task<IActionResult> DeleteShortenedUrl(string code)
+    {
+        var result = await _urlShorteningService.DeleteShortUrlAsync(code);
+        return Ok(result);
+    }
+
     [HttpPost("api/shorten")]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
     {
@@ -25,7 +45,8 @@ public class ShortenedUrlController(
 
         try
         {
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var  domain = Environment.GetEnvironmentVariable("DOMAIN_NAME");
+            var baseUrl = $"{Request.Scheme}://{domain}";
             var result = await _urlShorteningService.CreateShortenedUrlAsync(request.Url, baseUrl);
             return Ok(result);
         }
@@ -51,17 +72,4 @@ public class ShortenedUrlController(
     }
 
 
-    [HttpGet("api/links")]
-    public async Task<IActionResult> GetAllShortenedUrls()
-    {
-        var result = await _urlShorteningService.GetAllUrlsAsync();
-        return Ok(result);
-    }
-
-    [HttpDelete("api/links/{code}")]
-    public async Task<IActionResult> DeleteShortenedUrl(string code)
-    {
-        var result = await _urlShorteningService.DeleteShortUrlAsync(code);
-        return Ok(result);
-    }
 }
