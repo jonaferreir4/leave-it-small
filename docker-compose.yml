@@ -33,25 +33,41 @@ services:
       # Roteamento para a API (ex: /api/shorten, /api/links)
       - "traefik.http.routers.leaveit-api.rule=Host(`short.local`) && PathPrefix(`/api`)"
       - "traefik.http.routers.leaveit-api.entrypoints=web"
-      # Roteamento inteligente para o short_code (o coração do desafio)
-      - "traefik.http.routers.leaveit-redirect.rule=Host(`short.local`) && PathRegexp(`/`)"
+      - "traefik.http.routers.leaveit-api.priority=30"  # Aumente a prioridade para ser mais alto que a rota de redirect
+
+      - "traefik.http.routers.leaveit-redirect.rule=Host(`short.local`) && PathPrefix(`/`)"
       - "traefik.http.routers.leaveit-redirect.entrypoints=web"
-      - "traefik.http.routers.leaveit-redirect.priority=10" # Prioridade para evitar conflitos com a rota da API
+      - "traefik.http.routers.leaveit-redirect.priority=20" # Prioridade para evitar conflitos com a rota da API
       - "traefik.http.services.leaveit-service.loadbalancer.server.port=5000" 
 
+  frontend:
+    build:
+      context: ../lim-front
+      dockerfile: Dockerfile
+    container_name: leaveit-frontend
+    restart: always
+    depends_on:
+      - app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.leaveit-frontend.rule=Host(`short.local.front`)"
+      - "traefik.http.routers.leaveit-frontend.entrypoints=web"
+      - "traefik.http.routers.leaveit-frontend.priority=10" 
+      - "traefik.http.services.leaveit-frontend.loadbalancer.server.port=80"
+
   traefik: 
-      image: traefik:v3.5
-      command: 
-        - "--api.dashboard=true"
-        - "--entrypoints.web.address=:80"
-        - "--providers.docker=true"
-        - "--providers.docker.exposedbydefault=false"
-      ports:
-        - "80:80"
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-        - traefik-certs:/letsencrypt
-      # ... (restante da sua config do traefik, que parece ok)
+    image: traefik:v3.5
+    command: 
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik-certs:/letsencrypt
+    # ... (restante da sua config do traefik, que parece ok)
 
 volumes:
   postgres_data:
