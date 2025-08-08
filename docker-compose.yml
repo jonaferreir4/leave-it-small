@@ -31,11 +31,11 @@ services:
     labels:
       - "traefik.enable=true" 
       # Roteamento para a API (ex: /api/shorten, /api/links)
-      - "traefik.http.routers.leaveit-api.rule=Host(`short.local`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.leaveit-api.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.leaveit-api.entrypoints=web"
-      - "traefik.http.routers.leaveit-api.priority=30"  # Aumente a prioridade para ser mais alto que a rota de redirect
+      - "traefik.http.routers.leaveit-api.priority=30"
 
-      - "traefik.http.routers.leaveit-redirect.rule=Host(`short.local`) && PathPrefix(`/`)"
+      - "traefik.http.routers.leaveit-redirect.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/`)"
       - "traefik.http.routers.leaveit-redirect.entrypoints=web"
       - "traefik.http.routers.leaveit-redirect.priority=20" # Prioridade para evitar conflitos com a rota da API
       - "traefik.http.services.leaveit-service.loadbalancer.server.port=5000" 
@@ -50,7 +50,7 @@ services:
       - app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.leaveit-frontend.rule=Host(`short.local.front`)"
+      - "traefik.http.routers.leaveit-frontend.rule=Host(`${DOMAIN_NAME_FRONT}`)"
       - "traefik.http.routers.leaveit-frontend.entrypoints=web"
       - "traefik.http.routers.leaveit-frontend.priority=10" 
       - "traefik.http.services.leaveit-frontend.loadbalancer.server.port=80"
@@ -59,15 +59,35 @@ services:
     image: traefik:v3.5
     command: 
       - "--api.dashboard=true"
-      - "--entrypoints.web.address=:80"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+
+      - "--entrypoints.web.address=:80"
+      # - "--entrypoints.websecure.address=:443"
+
+      # - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      # - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+
+      # - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      # - "--certificatesresolvers.letsencrypt.acme.email=${LE_EMAIL}"
+      # - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
+      # - "443:443"
+      # - "8080:8080" # Porta para o dashboard da API
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - traefik-certs:/letsencrypt
-    # ... (restante da sua config do traefik, que parece ok)
+    # labels:
+    #     # Roteamento para o dashboard do Traefik
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.dashboard.rule=Host(`traefik.dominio.com`)"
+    #   - "traefik.http.routers.dashboard.service=api@internal"
+    #   - "traefik.http.routers.dashboard.entrypoints=websecure"
+    #   - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+    #   # Autenticação básica para o dashboard
+    #   - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+    #   - "traefik.http.routers.dashboard.middlewares=dashboard-auth" 
 
 volumes:
   postgres_data:
