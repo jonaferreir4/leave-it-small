@@ -61,5 +61,6 @@ DB_PASSWORD=senhaforte
 DOMAIN_NAME=seudominio.com
 
 ```
+```env
 $ docker-compose up --build
 ```
